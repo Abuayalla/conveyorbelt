@@ -1,0 +1,94 @@
+//http://conveyorbelt.rf.gd/display-data.php/
+#include <ESP8266WiFi.h>
+#include <WiFiClientSecure.h>
+ 
+#define ON_Board_LED 2 
+
+const char* ssid = "CU_Young Minds"; //--> Your wifi name or SSID.
+const char* password = "9994222986"; //--> Your wifi password.
+
+const char* host = "script.google.com";
+const int httpsPort = 443;
+int value = -1;
+
+WiFiClientSecure client; //--> Create a WiFiClientSecure object.
+
+String GAS_ID = "AKfycbwzkHTLhZTTMZGrLXUvUCYNW_zUgRHeY30wOHOe"; //--> spreadsheet script ID
+String emailId = "abuayalla@gmail.com";
+
+int conveyorRunningStatus = 1;
+
+void setup() {
+
+  pinMode(2, INPUT_PULLUP);
+  Serial.begin(115200);
+  delay(500);
+
+  WiFi.begin(ssid, password); //--> Connect to your WiFi router
+  Serial.println("");
+    
+  pinMode(ON_Board_LED,OUTPUT); //--> On Board LED port Direction output
+  digitalWrite(ON_Board_LED, HIGH); //--> Turn off Led On Board
+
+  
+  Serial.print("Connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    digitalWrite(ON_Board_LED, LOW);
+    delay(250);
+    digitalWrite(ON_Board_LED, HIGH);
+    delay(250);
+  }
+  digitalWrite(ON_Board_LED, HIGH); //--> Turn off the On Board LED when it is connected to the wifi router.
+  Serial.println("");
+  Serial.print("Successfully connected to : ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
+  client.setInsecure();
+}
+
+void loop() {
+  value = digitalRead(2);
+  Serial.print("Current Status: ");
+  Serial.println(value);
+  if(value==0 && conveyorRunningStatus==1){
+    sendData(0,0);
+    conveyorRunningStatus = 0;
+    Serial.println("Conveyor Started");
+  }
+
+  if(value==1 && conveyorRunningStatus==0){
+    sendData(1,1);
+    conveyorRunningStatus = 1;  
+    Serial.println("Conveyor Stopped");
+  }
+  delay(2000);
+}
+
+
+void sendData(int tem, int hum) {
+  Serial.println("==========");
+  Serial.print("connecting to ");
+  Serial.println(host);
+  
+  
+  if (!client.connect(host, httpsPort)) {
+    Serial.println("connection failed");
+    return;
+  }
+  
+  String string_temperature =  String(tem);
+  String string_humidity =  String(hum, DEC); 
+  String url = "/macros/s/" + GAS_ID + "/exec?status=" + string_temperature + "&mail=" + string_humidity + "&emailId=" + emailId;
+  Serial.print("requesting URL: ");
+  Serial.println(url);
+
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+         "Host: " + host + "\r\n" +
+         "User-Agent: BuildFailureDetectorESP8266\r\n" +
+         "Connection: close\r\n\r\n");
+
+  Serial.println("request sent");
+} 

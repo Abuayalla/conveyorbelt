@@ -1,0 +1,22 @@
+function doGet(request){
+  // Open Google Sheet using ID
+  var sheet = SpreadsheetApp.openById("17fOc4ke4frGpanBoNeI5WoWP4fEy_9LiAasfNxiJI3k");
+
+  // Get all values in active sheet
+  var values = sheet.getActiveSheet().getDataRange().getDisplayValues();
+  var data = '';
+
+  // Iterate values in descending order 
+  for (var i = values.length - 1; i >= 2; i--) {
+
+    // Get each row
+    var row = values[i];
+
+    data = data + row[0] + '\n' + row[1] + '\n' + row[2] + '\n' + row[3] + '\n' + row[4] + '\n' + row[5] + '\n';
+  }
+  
+  
+  return ContentService
+  .createTextOutput(data)
+  .setMimeType(ContentService.MimeType.TEXT);
+}

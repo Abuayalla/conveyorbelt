@@ -1,0 +1,60 @@
+<?php
+
+$servername = "sql300.epizy.com";
+
+// REPLACE with your Database name
+$dbname = "epiz_31559394_conveyor_data";
+// REPLACE with Database user
+$username = "epiz_31559394";
+// REPLACE with Database user password
+$password = "KMnvlXHQzTJVVW";
+
+// Keep this API Key value to be compatible with the ESP32 code provided in the project page. 
+// If you change this value, the ESP32 sketch needs to match
+$api_key_value = 'tPmAT5Ab3j7F9';
+
+$api_key= $location = $on_time = $off_time = $stoppage_time = "POST";
+
+if ($_SERVER["REQUEST_METHOD"] == "GET") {
+    $api_key = test_input($_GET["api_key"]);
+    if($api_key == $api_key_value) {
+        $location = test_input($_GET["location"]);
+        $on_time = test_input($_GET["on_time"]);
+        $off_time = test_input($_GET["off_time"]);
+        $stoppage_time = test_input($_GET["stoppage_time"]);
+        
+        // Create connection
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        // Check connection
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        } 
+        
+        $sql = "INSERT INTO SensorData (location, on_time, off_time, stoppage_time)
+        VALUES ('" . $location . "', '" . $on_time . "', '" . $off_time . "', '" . $stoppage_time . "')";
+        
+        if ($conn->query($sql) === TRUE) {
+            echo "New record created successfully";
+        } 
+        else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
+    
+        $conn->close();
+    }
+    else {
+        $actual_link = "http://" . $_SERVER["HTTP_HOST"] . "<br>" . $_SERVER["REQUEST_URI"];
+        echo "Wrong API Key provided." . "<br>" . $actual_link . "<br>" . $api_key;
+    }
+
+}
+else {
+    echo "No data posted with HTTP POST.";
+}
+
+function test_input($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}

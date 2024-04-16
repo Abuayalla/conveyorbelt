@@ -1,0 +1,58 @@
+function doGet(request){
+  // Open Google Sheet using ID
+  var sheet = SpreadsheetApp.openById("17fOc4ke4frGpanBoNeI5WoWP4fEy_9LiAasfNxiJI3k");
+  var result = {"status": "SUCCESS"};
+  try{
+    // Get all Parameters
+    var status = request.parameter.status;
+    var mail = request.parameter.mail;
+    var emailId = request.parameter.emailId;
+    var d = new Date();
+    
+    var values = sheet.getActiveSheet().getDataRange().getValues();
+    
+    if(status==0){
+          // Append data on Google Sheet
+      var rowData = sheet.appendRow(['1', 'Mine', d]);
+    }
+    else if(status==1){
+      sheet.getActiveSheet().getRange(values.length,4).setValue(d);
+      var startValue = sheet.getActiveSheet().getRange(values.length,3).getValue();
+      Logger.log(startValue);
+      var value = d-startValue;
+      sheet.getActiveSheet().getRange(values.length,5).setValue(value);
+      d = new Date();
+      sheet.getActiveSheet().getRange(values.length,6).setValue(d);
+    }
+    
+    if(mail==1){
+      sendMail(emailId);
+    }
+
+  }catch(exc){
+    // If error occurs, throw exception
+    result = {"status": "FAILED", "message": exc};
+  }
+
+  // Return result
+  return ContentService
+  .createTextOutput(JSON.stringify(result))
+  .setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendMail(emailAddress){
+  // Send Alert Email.
+  var message = 'Conveyor Stopped Alert email!'; // Second column
+  var subject = 'Conveyor is stopped.';
+  MailApp.sendEmail(emailAddress, subject, message)
+}
+
+function check(){
+  var sheet = SpreadsheetApp.openById("17fOc4ke4frGpanBoNeI5WoWP4fEy_9LiAasfNxiJI3k");
+  d = new Date();
+
+  var startValue = sheet.getActiveSheet().getRange(2,3).getValue();
+  Logger.log(startValue);
+  var value = d-startValue;
+  Logger.log(value);
+}
